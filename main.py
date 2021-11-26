@@ -17,8 +17,11 @@ class BeatMaker:
         self.tempo = 140
         # Volume 0-127
         self.volume = 100
+        # Amount of beats per bar
         self.beats = 4
+        # Amount of bars per song
         self.amtbars = 64
+        # Instance of Midi object
         self.MyMIDI = MIDIFile(1)
 
     def generateDegrees(self, rootdegree, amt, scale):
@@ -31,6 +34,7 @@ class BeatMaker:
             return
 
         degrees = [rootdegree] * amt # sets all values to the rootnote, but all elements except for [0] will be overwritten.
+        # Fills the degree list with notes according to the selected interval 'scheme'
         for i in range(1, amt):
             degrees[i] = degrees[i-1] + intervals[(i-1)%len(intervals)]
         self.degrees = degrees
@@ -53,6 +57,9 @@ class BeatMaker:
     def setAmountBars(self, amt):
         self.amtbars = amt
 
+    def setBeatsPerBar(self, amt):
+        self.beats = amt
+
     def exportToMidi(self, filename):
         with open(f'{filename}.mid', "wb") as outputfile:
             self.MyMIDI.writeFile(outputfile)
@@ -60,6 +67,6 @@ class BeatMaker:
 
 if __name__ == "__main__":
     bm = BeatMaker()
-    bm.generateDegrees(57, 14, 'minor')
+    bm.generateDegrees(57, 14, 'major')
     bm.generateMelody()
-    bm.exportToMidi('a-minor-melody')
+    bm.exportToMidi('a-major-melody')
