@@ -1,0 +1,5 @@
+Leads           (Saws)
+FX-Leads        (Stabs/Screech)
+Percusion       (Snare/Hihat/)
+Low-end         (Kicks/Bass)
+FX              (Impacts/reversed cyms)
