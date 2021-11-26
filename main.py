@@ -1,27 +1,62 @@
 from midiutil import MIDIFile
+import random as r
+class BeatMaker:
+    def __init__(self):
+        #####DEFAULT VALUES########
+        # Range of notes where 60 = C5
+        self.degrees = [60, 62, 63, 65, 67, 68, 70, 72] # C minor
+        # Track to which notes are added (Piano roll???)
+        self.track   = 0
+        # MIDI self.channel nr
+        self.channel = 1
+        # Time at which the note is played in a bar
+        self.time    = 0
+        # Length of note
+        self.duration = 1
+        # BPM
+        self.tempo = 140
+        # Volume 0-127
+        self.volume = 100
+        self.barlength = 4
+        self.amtbars = 4
+        self.MyMIDI = MIDIFile(1)
+
+    def generateDegrees(self, rootdegree, amt, scale):
+        if scale == 'major':
+            intervals = [2, 2, 1, 2, 2, 2, 1] # Whole, whole, half, whole, whole, whole, half steps.
+        elif scale == 'minor':
+            intervals = [2, 1, 2, 2, 1, 2, 2] # Whole, half, whole, whole, half, whole, whole steps.
+        else:
+            print('This scale has not been implemented')
+
+        degrees = [rootdegree] * amt # sets all values to the rootnote, but all elements except for [0] will be overwritten.
+        for i in range(1, amt):
+            degrees[i] = degrees[i-1] + intervals[(i-1)%len(intervals)]
+        self.degrees = degrees
+
+    def generateMelody(self):
+        for bars in range(self.amtbars):
+            self.generateBar()
+
+    def generateBar(self):
+        bassdegrees = [self.degrees[0] - 12, self.degrees[4] - 12, self.degrees[3] - 12, self.degrees[5] - 12] # (Semi) Hardcoded bass notes (will adjust to major/minor)
+        for i, degrees in enumerate(bassdegrees):
+            self.MyMIDI.addNote(self.track, self.channel, degrees, i * 4, 4, self.volume)
 
 
-# Assuming that an octave is 12 degrees and '60' = C5
-degrees = [60, 62, 63, 65, 67, 68, 70, 72] # C minor
-# Track to which notes are added (Piano roll???)
-track   = 0
-# MIDI channel nr
-channel = 1
-# Time at which the note is played in a bar
-time    = 1 
-# Length of note
-duration = 1
-# BPM
-tempo = 140
-# Volume 0-127
-volume = 100
+        for note in range(1, self.barlength + 1):
+            self.pitch = r.choice(self.degrees)
+            self.MyMIDI.addNote(self.track, self.channel, self.pitch, self.time, self.duration, self.volume)
 
-MyMIDI = MIDIFile(1)
-MyMIDI.addTempo(track, time, tempo)
+            self.time = self.time + 1
 
-for pitch in degrees:
-    MyMIDI.addNote(track, channel, pitch, time, duration, volume)
+    def exportToMidi(self, filename):
+        with open(f'{filename}.mid', "wb") as outputfile:
+            self.MyMIDI.writeFile(outputfile)
 
 
-with open("major-scale.mid", "wb") as outputfile:
-    MyMIDI.writeFile(outputfile)
+if __name__ == "__main__":
+    bm = BeatMaker()
+    bm.generateDegrees(57, 14, 'minor')
+    bm.generateMelody()
+    bm.exportToMidi('a-minor-melody')
