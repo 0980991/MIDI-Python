@@ -17,8 +17,8 @@ class BeatMaker:
         self.tempo = 140
         # Volume 0-127
         self.volume = 100
-        self.barlength = 4
-        self.amtbars = 4
+        self.beats = 4
+        self.amtbars = 64
         self.MyMIDI = MIDIFile(1)
 
     def generateDegrees(self, rootdegree, amt, scale):
@@ -28,6 +28,7 @@ class BeatMaker:
             intervals = [2, 1, 2, 2, 1, 2, 2] # Whole, half, whole, whole, half, whole, whole steps.
         else:
             print('This scale has not been implemented')
+            return
 
         degrees = [rootdegree] * amt # sets all values to the rootnote, but all elements except for [0] will be overwritten.
         for i in range(1, amt):
@@ -35,20 +36,22 @@ class BeatMaker:
         self.degrees = degrees
 
     def generateMelody(self):
+        bassdegrees = [self.degrees[0] - 12, self.degrees[4] - 12, self.degrees[3] - 12, self.degrees[5] - 12] # (Semi) Hardcoded bass notes (will adjust to major/minor)
+        bassnote = 0
         for bars in range(self.amtbars):
+            self.MyMIDI.addNote(self.track, self.channel, bassdegrees[bassnote % 4], self.time, 4, self.volume)
+            bassnote += 1
             self.generateBar()
 
     def generateBar(self):
-        bassdegrees = [self.degrees[0] - 12, self.degrees[4] - 12, self.degrees[3] - 12, self.degrees[5] - 12] # (Semi) Hardcoded bass notes (will adjust to major/minor)
-        for i, degrees in enumerate(bassdegrees):
-            self.MyMIDI.addNote(self.track, self.channel, degrees, i * 4, 4, self.volume)
-
-
-        for note in range(1, self.barlength + 1):
+        for beat in range(self.beats):
             self.pitch = r.choice(self.degrees)
             self.MyMIDI.addNote(self.track, self.channel, self.pitch, self.time, self.duration, self.volume)
 
             self.time = self.time + 1
+
+    def setAmountBars(self, amt):
+        self.amtbars = amt
 
     def exportToMidi(self, filename):
         with open(f'{filename}.mid', "wb") as outputfile:
