@@ -18,7 +18,7 @@ class BeatMaker:
         # Volume 0-127
         self.volume   = 100
         # Amount of bars per song
-        self.amt_bars = 64
+        self.amt_bars = 4
         # Amount of beats per bar
         self.beats    = 4
         # Instance of Midi object
@@ -63,27 +63,44 @@ class BeatMaker:
 
             self.time = self.time + 1
 
-    def generateTriads(self, tonality):
-        if tonality == 'major':
-            diatonic_triads = ['I', 'ii', 'iii', 'IV', 'V', 'vi']
-            triad_intervals = [0, 3, 4]
-        elif tonality == 'minor':
-            diatonic_triads = ['i' , 'ii', 'III', 'iv', 'v', 'VI']
-            triad_intervals = [0, 4, 3]
-        else:
-            print('This tonality has not yet been implemented')
-            return
+    def generateTriads(self):
+        middle_triads = [2, 3, 4] # Chord numbers (converted from roman numerals) that fit best in between 1st and last chord
 
-        progression = []
-        for triads in range(4): # A progression is 4 triads in this case.
-            triad = r.choice(diatonic_triads)
-            while triad in progression: # A progression must have 4 unique triads
-                 triad = r.choice(diatonic_triads)
-            progression.append(triad)
+        start_end_triads = [5, 6] # Chords that fit best first and/or last
 
-        for time, triad in enumerate(progression):
-            self.time = time * 4 # Multiply by for to spread it out over each bar
-            self.triadToMIDI(triad_intervals, triad)
+        time = 0
+        for i in range(1):
+
+            progression = []
+            for chord in range(4):
+                if chord == 0:   # First chord in progression
+                    progression.append(1)
+                elif chord == 3: # Last chord in progression
+                    progression.append(r.choice(start_end_triads))
+                else:
+                    random_triad = r.choice(middle_triads)
+                    while random_triad == progression[chord-1]:
+                        random_triad = r.choice(middle_triads)
+                    progression.append(random_triad)
+
+            chordstr = ''
+            for chord in progression:
+                chordstr += f', {chord}'
+            print(chordstr[2:])
+
+            for chord in progression:
+                triad_pitches = None
+                ### Determine and set first note in triad
+                for chord_option in range(6):
+                    if chord == chord_option + 1:
+                        triad_pitches = [self.degrees[chord_option]]
+
+                        triad_pitches.append(self.degrees[chord_option + 2])
+                        triad_pitches.append(self.degrees[chord_option + 4])
+
+                for pitch in triad_pitches:
+                    self.MyMIDI.addNote(0, 1, pitch - 12, time, 4, 100) # -12 sets it 1 octave lower than the melody
+                time += 4
 
     def setAmountBars(self, amt):
         self.amt_bars = amt
@@ -93,11 +110,12 @@ class BeatMaker:
 
     def exportToMidi(self, filename):
         with open(f'{filename}.mid', "wb") as outputfile:
-            self.MyMIDI.writeFile(outputfile)
+             self.MyMIDI.writeFile(outputfile)
 
 
 if __name__ == "__main__":
     bm = BeatMaker()
     bm.generateDegrees(57, 14, 'major')
+    bm.generateTriads()
     bm.generateMelody()
-    bm.exportToMidi('a-major-melody')
+    bm.exportToMidi('a-major-triads-and-melody')
